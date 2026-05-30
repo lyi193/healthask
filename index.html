@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康小守護 - 熊醫生機器人</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Friendly Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            background-color: #f0fdf4; /* Light green background */
+        }
+        .bubble-shadow {
+            box-shadow: 0 8px 0px 0px rgba(187, 247, 208, 0.6);
+        }
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+        /* Custom scrollbar for friendly look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #bbf7d0;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #86efac;
+        }
+        /* Animation for bear breathing */
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-6px) scale(1.02); }
+        }
+        .bear-animation {
+            animation: breathe 4s ease-in-out infinite;
+        }
+        /* Heartbeat for warning badge */
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .warning-pulse {
+            animation: heartbeat 2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Navigation / Header -->
+    <header class="bg-emerald-400 text-white p-4 shadow-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white p-2 rounded-full text-2xl text-emerald-500 shadow-inner">
+                    🧸
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-wider">健康小守護</h1>
+                    <p class="text-xs text-emerald-100 font-medium">熊醫生陪你一起保護身體健康！</p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="toggleModal('parent-modal')" class="bg-emerald-500 hover:bg-emerald-600 px-3 py-1.5 rounded-full text-xs md:text-sm font-bold transition duration-200 btn-bounce flex items-center space-x-1">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>家長/老師專區</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Side: Chat Room with Dr. Bear (7 columns) -->
+        <section class="lg:col-span-7 flex flex-col bg-white rounded-3xl shadow-xl border-4 border-emerald-100 overflow-hidden min-h-[550px] md:min-h-[650px] max-h-[750px]">
+            <!-- Chat Header -->
+            <div class="bg-emerald-50 p-4 border-b-2 border-emerald-100 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="relative">
+                        <div class="w-12 h-12 bg-emerald-200 rounded-full flex items-center justify-center text-3xl bear-animation">
+                            🐻
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-gray-800 text-lg flex items-center">
+                            熊醫生 (Dr. Bear)
+                            <span class="ml-2 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs rounded-full">AI 助手</span>
+                        </h2>
+                        <p class="text-xs text-gray-500">哈囉！身體哪裡不舒服嗎？跟我說說看～</p>
+                    </div>
+                </div>
+                <!-- Reset Conversation Button -->
+                <button onclick="resetChat()" class="text-gray-400 hover:text-red-500 transition duration-200 p-2 rounded-full hover:bg-red-50" title="重新對話">
+                    <i class="fa-solid fa-arrows-rotate text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Chat History Window -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-amber-50/20">
+                <!-- Welcome Message from Dr. Bear -->
+                <div class="flex items-start space-x-2.5">
+                    <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+                        🐻
+                    </div>
+                    <div class="flex flex-col space-y-1 max-w-[80%]">
+                        <div class="bg-white border border-emerald-100 text-gray-800 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm text-sm md:text-base leading-relaxed">
+                            小朋友你好呀！我是你的健康小夥伴<strong>「熊醫生」</strong>🧸🩺<br><br>
+                            如果你的身體有任何地方熱熱的、痛痛的，或者是流鼻水、咳嗽，都可以點下面的按鈕，或者在下面輸入告訴我喔！<br><br>
+                            ⚠️ <span class="text-red-500 font-bold">小提醒：</span>熊醫生是機器人小幫手，如果你覺得<strong>非常非常不舒服</strong>，請一定要立刻轉頭大聲告訴身邊的<strong>爸爸、媽媽或者是老師</strong>喔！
+                        </div>
+                        <span class="text-[10px] text-gray-400 self-start px-1">剛才</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Symptom Quick Selector -->
+            <div class="px-4 py-3 bg-emerald-50/40 border-t border-emerald-100">
+                <p class="text-xs font-bold text-emerald-800 mb-2 flex items-center">
+                    <i class="fa-solid fa-hands-holding-child mr-1"></i> 快速點選你不舒服的地方：
+                </p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="sendQuickSymptom('🤒 發燒了（身體熱熱的、頭暈暈的）')" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs md:text-sm px-3 py-1.5 rounded-full font-medium transition duration-150 btn-bounce">
+                        🤒 發燒熱熱的
+                    </button>
+                    <button onclick="sendQuickSymptom('🤢 肚子痛（想吐、肚子怪怪的）')" class="bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs md:text-sm px-3 py-1.5 rounded-full font-medium transition duration-150 btn-bounce">
+                        🤢 肚子痛想吐
+                    </button>
+                    <button onclick="sendQuickSymptom('🤧 流鼻水、打噴嚏（鼻子塞住了）')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs md:text-sm px-3 py-1.5 rounded-full font-medium transition duration-150 btn-bounce">
+                        🤧 鼻水流不停
+                    </button>
+                    <button onclick="sendQuickSymptom('😷 咳嗽、喉嚨痛（吞口水會痛）')" class="bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs md:text-sm px-3 py-1.5 rounded-full font-medium transition duration-150 btn-bounce">
+                        😷 咳嗽喉嚨痛
+                    </button>
+                    <button onclick="sendQuickSymptom('🤕 撞到頭（或者頭痛痛的）')" class="bg-orange-100 hover:bg-orange-200 text-orange-700 text-xs md:text-sm px-3 py-1.5 rounded-full font-medium transition duration-150 btn-bounce">
+                        🤕 撞到/頭痛痛
+                    </button>
+                    <button onclick="sendQuickSymptom('🦟 皮膚癢（蚊子咬，或者起紅疹）')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs md:text-sm px-3 py-1.5 rounded-full font-medium transition duration-150 btn-bounce">
+                        🦟 皮膚紅紅癢癢
+                    </button>
+                </div>
+            </div>
+
+            <!-- Message Input Area -->
+            <div class="p-4 bg-white border-t-2 border-emerald-100">
+                <form id="chat-form" onsubmit="handleFormSubmit(event)" class="flex items-center space-x-2">
+                    <input id="user-input" type="text" autocomplete="off" placeholder="用簡單的話告訴熊醫生你哪裡痛痛..." 
+                        class="flex-1 border-2 border-emerald-200 focus:border-emerald-400 focus:ring-0 rounded-full px-4 py-3 text-sm md:text-base outline-none transition duration-200 placeholder-gray-400">
+                    <button type="submit" class="bg-emerald-400 hover:bg-emerald-500 text-white w-12 h-12 rounded-full flex items-center justify-center transition duration-200 btn-bounce shadow-md">
+                        <i class="fa-solid fa-paper-plane text-lg"></i>
+                    </button>
+                </form>
+                <div class="mt-1.5 flex justify-between items-center px-1">
+                    <span class="text-[10px] text-gray-400 flex items-center">
+                        <i class="fa-solid fa-circle-info mr-1"></i> 可以直接用注音或中文輸入喔！
+                    </span>
+                    <button onclick="startVoiceInput()" class="text-emerald-600 hover:text-emerald-700 text-xs font-semibold flex items-center space-x-1">
+                        <i class="fa-solid fa-microphone"></i>
+                        <span>語音輸入</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Side: Guidelines & Mini Game (5 columns) -->
+        <section class="lg:col-span-5 flex flex-col space-y-6">
+
+            <!-- Card 1: Emergency Lights (紅綠燈安全守則) -->
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-3xl border-4 border-amber-200 shadow-md">
+                <div class="flex items-center space-x-2 mb-3">
+                    <span class="text-2xl warning-pulse">🚨</span>
+                    <h3 class="text-lg font-bold text-amber-900">身體紅綠燈：什麼時候要去看醫生？</h3>
+                </div>
+                <p class="text-xs text-amber-800 mb-4">小朋友，如果你的身體出現以下這幾種情況，表示身體在發出「紅色警報」了！必須立刻打電話或告訴身邊的大人，請他們帶你去看醫生喔！</p>
+                
+                <div class="space-y-3">
+                    <div class="bg-red-100/80 p-3 rounded-2xl flex items-start space-x-2.5 border-l-4 border-red-500">
+                        <span class="text-lg">🔴</span>
+                        <div>
+                            <h4 class="font-bold text-red-900 text-sm">紅色（立刻出發看醫生！）</h4>
+                            <p class="text-xs text-red-800 leading-relaxed">發燒超過39度、呼吸覺得很困難、肚子像被揍一樣劇烈痛痛、撞到頭一直吐、流血停不下來。</p>
+                        </div>
+                    </div>
+                    <div class="bg-amber-100/80 p-3 rounded-2xl flex items-start space-x-2.5 border-l-4 border-amber-500">
+                        <span class="text-lg">🟡</span>
+                        <div>
+                            <h4 class="font-bold text-amber-900 text-sm">黃色（需要請家長注意，預約看診）</h4>
+                            <p class="text-xs text-amber-800 leading-relaxed">咳嗽越來越嚴重、流鼻水超過三天、肚子悶悶痛痛、身體長出一顆顆紅疹、精神變得很差很想睡。</p>
+                        </div>
+                    </div>
+                    <div class="bg-green-100/80 p-3 rounded-2xl flex items-start space-x-2.5 border-l-4 border-green-500">
+                        <span class="text-lg">🟢</span>
+                        <div>
+                            <h4 class="font-bold text-green-900 text-sm">綠色（多休息多喝水，再觀察看看）</h4>
+                            <p class="text-xs text-green-800 leading-relaxed">輕微打噴嚏、剛被蚊子咬一小包、跑跳流汗累了。多喝溫開水，睡一覺可能就好了！</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Interactive Health Capsule Machine (健康習慣扭蛋機) -->
+            <div class="bg-gradient-to-br from-blue-50 to-emerald-50 p-5 rounded-3xl border-4 border-blue-200 shadow-md flex-1 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <span class="text-2xl">🥚</span>
+                        <h3 class="text-lg font-bold text-blue-950">健康好習慣扭蛋機</h3>
+                    </div>
+                    <p class="text-xs text-blue-800 mb-4">每天轉一次，學習一招打敗病菌的「無敵健康忍術」吧！</p>
+                    
+                    <!-- Capsule Machine Visual -->
+                    <div class="relative bg-white/80 border-2 border-blue-100 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[140px] mb-4">
+                        <div id="capsule-placeholder" class="text-center">
+                            <span class="text-5xl block mb-2 bear-animation">🎰</span>
+                            <p class="text-xs text-gray-500 font-medium">按下按鈕，轉出一顆健康扭蛋！</p>
+                        </div>
+                        <div id="capsule-result" class="hidden text-center space-y-2">
+                            <span class="text-5xl block animate-bounce">🔮</span>
+                            <h4 id="capsule-title" class="font-bold text-blue-900 text-sm"></h4>
+                            <p id="capsule-desc" class="text-xs text-gray-600 px-2 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="spinCapsule()" class="w-full bg-blue-400 hover:bg-blue-500 text-white font-bold py-3 rounded-2xl shadow-md transition duration-200 btn-bounce flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>轉動扭蛋機！</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Parent/Teacher Zone -->
+    <div id="parent-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border-4 border-emerald-400 animate-in fade-in zoom-in duration-200">
+            <!-- Modal Header -->
+            <div class="bg-emerald-400 text-white p-5 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-user-shield text-xl"></i>
+                    <h3 class="font-bold text-lg">家長與老師關懷專區</h3>
+                </div>
+                <button onclick="toggleModal('parent-modal')" class="text-white hover:text-emerald-100 text-2xl font-bold">&times;</button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    本系統旨在協助學童以輕鬆、無壓力的口吻，記錄和表達自己的身體狀況。您可以隨時查看與彙整孩子的諮詢紀錄，系統會為您打包成<b>「親師/就醫小聯絡簿」</b>，方便您帶孩子就醫時向醫生說明。
+                </p>
+
+                <!-- Action Button 1: Export Chat History -->
+                <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                    <h4 class="font-bold text-emerald-900 text-sm mb-1 flex items-center">
+                        <i class="fa-solid fa-file-medical-alt mr-1.5"></i> 產生親師聯絡小聯絡簿
+                    </h4>
+                    <p class="text-xs text-emerald-700 mb-3">自動整理刚才小朋友點選或輸入的症狀，方便轉寄給老師或展示給醫生看。</p>
+                    <button onclick="generateReport()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl transition duration-150 btn-bounce">
+                        <i class="fa-solid fa-magic mr-1"></i> 立即產生症狀摘要報告
+                    </button>
+                </div>
+
+                <!-- Report Output Container (Hidden by default) -->
+                <div id="report-container" class="hidden space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-700">📋 症狀簡報內容：</span>
+                        <button onclick="copyReport()" class="text-emerald-600 hover:underline text-xs font-bold">
+                            <i class="fa-solid fa-copy"></i> 複製內容
+                        </button>
+                    </div>
+                    <textarea id="report-text" readonly rows="5" class="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-700 bg-gray-50 focus:outline-none"></textarea>
+                    <div id="copy-success-msg" class="hidden text-xs text-green-600 font-bold text-center">
+                        ✓ 複製成功！您可以貼到 LINE、聯絡簿或直接給醫生看囉！
+                    </div>
+                </div>
+
+                <!-- Medical Safety Disclaimer -->
+                <div class="bg-red-50 p-3 rounded-xl border border-red-100 text-[11px] text-red-700 leading-relaxed">
+                    <b>醫療免責聲明：</b>本 AI 機器人僅提供健康衛教資訊引導與記錄，不能替代專業醫師的診斷與治療。若孩童有急性、危重症狀，請立即撥打 119 送醫。
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-gray-50 p-4 border-t border-gray-100 flex justify-end">
+                <button onclick="toggleModal('parent-modal')" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold px-5 py-2 rounded-xl text-xs transition duration-150">
+                    關閉
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-emerald-50 border-t border-emerald-100 py-4 mt-6 text-center text-xs text-emerald-800">
+        <p>© 2026 健康小守護 - 熊醫生機器人專為國小健康中心輔助設計 🧸</p>
+        <p class="text-[10px] text-emerald-600/70 mt-1">提醒：AI 助理不具實質醫療診斷功能，不舒服時請務必諮詢專業小兒科醫生。</p>
+    </footer>
+
+    <!-- JavaScript Section -->
+    <script>
+        // Store conversation history for AI context
+        let conversationHistory = [
+            {
+                role: "user",
+                parts: [{ text: "這是一個專為國小學生（6-12歲）設計的對話。你是一位溫柔、可愛、會使用許多Emoji、有耐心的『熊醫生』機器人。請用注音或非常簡單的話，親切地安慰小朋友，分析他們的狀況。如果發現他們提到紅色警戒症狀（如：發燒高於39度、大出血、撞到頭嘔吐、劇烈肚子痛、呼吸困難），必須用紅色的醒目文字強調『請立刻告訴爸爸媽媽或老師，馬上去看醫生！』。不要做醫療診斷，要多教導他們多喝水、休息等好習慣。" }]
+            },
+            {
+                role: "model",
+                parts: [{ text: "好的！我準備好了。我是最溫暖的熊醫生，我會用最適合國小小朋友聽得懂的話，好好關心他們、安慰他們，並做好安全守護！🧸❤️" }]
+            }
+        ];
+
+        // Health Habit database for Capsule Machine
+        const capsuleData = [
+            { title: "🧼 七字洗手神功", desc: "洗手要記得『內、外、夾、弓、大、立、完』，用肥皂洗滿20秒，病菌才不會被你吃進肚子喔！" },
+            { title: "🥛 咕嚕咕嚕多喝水", desc: "每天要喝夠 6 到 8 杯溫開水，水就像體內的清潔小火車，會把身體裡的壞病菌通通運走！" },
+            { title: "😷 口罩防護罩", desc: "去人多或空氣不好的地方、或是自己有咳嗽時，戴上口罩就像幫嘴巴和鼻子穿上無敵防彈衣！" },
+            { title: "🛌 睡飽飽精神好", desc: "國小學生每天要睡飽 9 到 10 個小時喔！睡覺的時候，身體裡的免疫細胞小兵會趁機升級，變得更強大！" },
+            { title: "👀 護眼3010法則", desc: "看書或看螢幕 30 分鐘，一定要讓眼睛休息 10 分鐘，看遠遠的綠色大樹，眼睛才不會生病喔！" },
+            { title: "🥦 彩虹蔬菜超能力", desc: "多吃綠色、紅色、黃色的青菜和水果，這些食物含有滿滿的維他命，會在你身上形成隱形的防護盾牌！" },
+            { title: "🦷 咕嚕嚕刷牙趣", desc: "吃完東西和睡覺前都要乖乖用含氟牙膏刷牙，還要搭配牙線，把藏在牙縫裡的『蛀牙蟲』通通趕走！" }
+        ];
+
+        // Web Speech API Synthesis voice support
+        let synth = window.speechSynthesis;
+
+        // Initialize on load
+        window.onload = function() {
+            // Check speech synthesis support
+            if (!synth) {
+                console.log("Speech synthesis not supported in this browser.");
+            }
+        };
+
+        // Toggle Modals
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                if (modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                } else {
+                    modal.classList.remove('flex');
+                    modal.classList.add('hidden');
+                }
+            }
+        }
+
+        // Spin the Capsule Machine
+        function spinCapsule() {
+            const placeholder = document.getElementById('capsule-placeholder');
+            const result = document.getElementById('capsule-result');
+            const title = document.getElementById('capsule-title');
+            const desc = document.getElementById('capsule-desc');
+
+            // Visual feedback: Spin state
+            placeholder.classList.add('hidden');
+            result.classList.remove('hidden');
+            result.innerHTML = `<span class="text-5xl block animate-spin">🌀</span><p class="text-xs text-blue-600 mt-2 font-bold">扭蛋轉動中...</p>`;
+
+            setTimeout(() => {
+                // Select a random habit
+                const randomIndex = Math.floor(Math.random() * capsuleData.length);
+                const habit = capsuleData[randomIndex];
+
+                // Render Capsule Result
+                result.innerHTML = `
+                    <span class="text-5xl block animate-bounce">🎁</span>
+                    <h4 class="font-bold text-blue-900 text-sm mt-1">🎉 恭喜獲得：${habit.title}</h4>
+                    <p class="text-xs text-gray-600 px-2 mt-2 leading-relaxed">${habit.desc}</p>
+                `;
+            }, 1000);
+        }
+
+        // Handle User Symptom button clicks
+        function sendQuickSymptom(symptomText) {
+            document.getElementById('user-input').value = symptomText;
+            document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+        }
+
+        // Handle text or form submission
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const inputEl = document.getElementById('user-input');
+            const message = inputEl.value.trim();
+
+            if (!message) return;
+
+            // Clear Input
+            inputEl.value = '';
+
+            // 1. Render User Message in Chat
+            renderMessage(message, 'user');
+
+            // 2. Render Loading Bubble from Dr. Bear
+            const loadingId = renderLoading();
+
+            try {
+                // 3. Call AI API
+                const reply = await callGeminiAI(message);
+
+                // 4. Remove loading and render model reply
+                removeLoading(loadingId);
+                renderMessage(reply, 'model');
+            } catch (error) {
+                console.error("AI Error: ", error);
+                removeLoading(loadingId);
+                renderMessage("哎呀...熊醫生的對講機好像有點收不到訊號 😭。不過，別忘記多喝水休息喔！如果很不舒服要立刻告訴爸媽！", 'model');
+            }
+        }
+
+        // Speech recognition (Voice Input) if browser supports it
+        function startVoiceInput() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showToast("您的瀏覽器不支援語音輸入喔！請直接打字吧 📝");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'zh-TW';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            showToast("🎙️ 正在聽你說話...請說：我肚子痛痛的、或是發燒了");
+
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const speechResult = event.results[0][0].transcript;
+                document.getElementById('user-input').value = speechResult;
+                showToast("✓ 聽懂了！幫你輸入好囉～");
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech Recognition Error", event.error);
+                showToast("☹ 沒聽清楚，再試一次或者用打字的吧！");
+            };
+        }
+
+        // Custom Toast Notification instead of alert()
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = "fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs md:text-sm px-4 py-2.5 rounded-full z-50 shadow-lg font-medium tracking-wide transition duration-300";
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Render regular chat messages
+        function renderMessage(text, role) {
+            const container = document.getElementById('chat-messages');
+            const messageWrapper = document.createElement('div');
+            const isUser = role === 'user';
+
+            messageWrapper.className = `flex items-start ${isUser ? 'justify-end' : ''} space-x-2.5`;
+
+            // Prepare styled text (support Red Light alerts from AI)
+            let formattedText = text;
+            
+            // Convert simple markdown style linebreaks to HTML
+            formattedText = formattedText.replace(/\n/g, '<br>');
+
+            // If the message contains emergency red flags (defined dynamically or by pattern), wrap them in red badges
+            const containsUrgent = /立刻告訴|馬上告訴|去醫院|看醫生|紅色警戒|緊急/i.test(text);
+
+            let avatar = isUser ? '🧒' : '🐻';
+            let bgClass = isUser ? 'bg-emerald-400 text-white rounded-tr-none' : 'bg-white border border-emerald-100 text-gray-800 rounded-tl-none';
+            
+            // Additional styling if AI flags something urgent
+            if (!isUser && containsUrgent) {
+                bgClass = 'bg-red-50 border-2 border-red-300 text-red-950 rounded-tl-none shadow-md';
+                avatar = '🚨';
+            }
+
+            const ttsButton = !isUser ? `
+                <button onclick="speakText(\`${text.replace(/["'‘“]/g, '').replace(/[\r\n]+/g, ' ')}\`)" class="text-emerald-600 hover:text-emerald-800 text-xs mt-1.5 flex items-center space-x-1 font-semibold">
+                    <i class="fa-solid fa-volume-high"></i>
+                    <span>唸給我聽</span>
+                </button>
+            ` : '';
+
+            messageWrapper.innerHTML = `
+                ${isUser ? '' : `<div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">${avatar}</div>`}
+                <div class="flex flex-col space-y-1 max-w-[80%]">
+                    <div class="${bgClass} px-4 py-3 rounded-2xl shadow-sm text-sm md:text-base leading-relaxed">
+                        ${formattedText}
+                    </div>
+                    <div class="flex items-center space-x-2 self-${isUser ? 'end' : 'start'} px-1">
+                        <span class="text-[9px] text-gray-400">${getFormattedTime()}</span>
+                        ${ttsButton}
+                    </div>
+                </div>
+                ${isUser ? `<div class="w-10 h-10 bg-emerald-300 rounded-full flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">${avatar}</div>` : ''}
+            `;
+
+            container.appendChild(messageWrapper);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Render Loading Bubble
+        function renderLoading() {
+            const container = document.getElementById('chat-messages');
+            const loadingId = 'loading-' + Date.now();
+            const messageWrapper = document.createElement('div');
+            messageWrapper.id = loadingId;
+            messageWrapper.className = `flex items-start space-x-2.5`;
+
+            messageWrapper.innerHTML = `
+                <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">🐻</div>
+                <div class="flex flex-col space-y-1 max-w-[80%]">
+                    <div class="bg-white border border-emerald-100 text-gray-500 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm text-sm">
+                        <span class="inline-flex items-center space-x-1">
+                            <span>熊醫生正在思考中</span>
+                            <span class="animate-bounce">●</span>
+                            <span class="animate-bounce" style="animation-delay: 0.2s">●</span>
+                            <span class="animate-bounce" style="animation-delay: 0.4s">●</span>
+                        </span>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(messageWrapper);
+            container.scrollTop = container.scrollHeight;
+            return loadingId;
+        }
+
+        // Remove Loading Bubble
+        function removeLoading(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        // Get nice clean HH:MM text
+        function getFormattedTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            return `${hours}:${mins}`;
+        }
+
+        // Speak using SpeechSynthesis
+        function speakText(text) {
+            if (!synth) return;
+
+            // Stop speaking if currently speaking
+            synth.cancel();
+
+            // Filter out emojis and specific punctuation for cleaner reading
+            const cleanText = text.replace(/[\u2000-\u32FF]/g, '') // Remove emojis roughly
+                                  .replace(/[🚨🧸🤒🤢🤧😷🤕🦟❤️🥛🧼🧬🧗🧗🧗🎉✓✕⚠️]/g, '');
+
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = 'zh-TW';
+            utterance.rate = 1.0; // Comfortably slow for kids
+            utterance.pitch = 1.1; // Slightly higher pitch for friendly cartoon doctor vibe
+
+            synth.speak(utterance);
+        }
+
+        // Call the Gemini API utilizing generateContent
+        async function callGeminiAI(userMessage) {
+            // Push user message to prompt context
+            conversationHistory.push({
+                role: "user",
+                parts: [{ text: userMessage }]
+            });
+
+            // Keep conversation logs bounded to prevent bloated payload
+            if (conversationHistory.length > 20) {
+                // Keep system prompt + last 18 turns
+                conversationHistory = [
+                    conversationHistory[0],
+                    conversationHistory[1],
+                    ...conversationHistory.slice(conversationHistory.length - 18)
+                ];
+            }
+
+            const apiKey = ""; // Left empty for system context inject
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: conversationHistory,
+                // Optional system instruction to re-enforce Dr. Bear rules
+                systemInstruction: {
+                    parts: [{
+                        text: "你是一位對國小學生（6至12歲）極度親切的虛擬『熊醫生』。用簡單溫和的話，多用表情符號安慰他們。當小朋友提到可能危急、或高燒（發燒大於39度）、劇烈腹痛、呼吸困難、流血等，請立刻使用醒目格式（例如『⚠️【紅色警戒！請立刻轉身告訴爸爸、媽媽、或身邊的老師，帶你去看醫生！】』）來提醒他們。切勿進行專業診斷，多宣導健康習慣。"
+                    }]
+                }
+            };
+
+            // Implement basic fetch with retry mechanism (exponential backoff)
+            let delay = 1000;
+            const maxRetries = 3;
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+                    const replyText = candidate?.content?.parts?.[0]?.text;
+
+                    if (replyText) {
+                        // Push model answer to context
+                        conversationHistory.push({
+                            role: "model",
+                            parts: [{ text: replyText }]
+                        });
+                        return replyText;
+                    } else {
+                        throw new Error("Empty response from AI engine.");
+                    }
+
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    // Wait before retry
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2; // exponential backup
+                }
+            }
+        }
+
+        // Reset conversation
+        function resetChat() {
+            // Ask confirmation gently
+            const confirmed = confirm("確定要清除剛才的對話，重新開始嗎？🧸");
+            if (confirmed) {
+                conversationHistory = [
+                    conversationHistory[0],
+                    conversationHistory[1]
+                ];
+                const container = document.getElementById('chat-messages');
+                container.innerHTML = `
+                    <!-- Welcome Message from Dr. Bear -->
+                    <div class="flex items-start space-x-2.5 animate-in fade-in duration-300">
+                        <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+                            🐻
+                        </div>
+                        <div class="flex flex-col space-y-1 max-w-[80%]">
+                            <div class="bg-white border border-emerald-100 text-gray-800 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm text-sm md:text-base leading-relaxed">
+                                小朋友你好呀！我是你的健康小夥伴<strong>「熊醫生」</strong>🧸🩺<br><br>
+                                我們重新開始聊天囉！你現在身體有哪裡不舒服嗎？點選下面的按鈕或跟我說說看吧！
+                            </div>
+                            <span class="text-[10px] text-gray-400 self-start px-1">剛才</span>
+                        </div>
+                    </div>
+                `;
+                showToast("已經重新開始對話囉！🐻");
+            }
+        }
+
+        // Generate summary report for parents/teachers
+        function generateReport() {
+            const reportContainer = document.getElementById('report-container');
+            const reportText = document.getElementById('report-text');
+
+            // Collect conversation logs
+            // Filter user entries to list out what the child expressed
+            const userChats = conversationHistory
+                .filter(item => item.role === 'user' && !item.parts[0].text.includes("對話"))
+                .map(item => `• ${item.parts[0].text}`);
+
+            if (userChats.length === 0) {
+                reportText.value = "⚠️ 目前尚無任何對話紀錄。請先讓小朋友點選或輸入不舒服的症狀後，再來點此匯出報告喔！";
+                reportContainer.classList.remove('hidden');
+                return;
+            }
+
+            const dateStr = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            
+            let summaryReport = `【健康小守護 - 熊醫生問診摘要小紙條】\n`;
+            summaryReport += `報告時間：${dateStr}\n`;
+            summaryReport += `----------------------------------------\n`;
+            summaryReport += `小朋友表達的不舒服症狀：\n`;
+            summaryReport += userChats.join('\n') + `\n`;
+            summaryReport += `----------------------------------------\n`;
+            summaryReport += `⚠️ 提醒：請家長/老師留意學童之精神活力狀況。本摘要可用於提供給門診小兒科/家醫科醫師作為臨床看診之參考。若有紅燈危急狀況（高燒>39度、呼吸急促等）應盡速就醫！`;
+
+            reportText.value = summaryReport;
+            reportContainer.classList.remove('hidden');
+        }
+
+        // Copy text to clipboard using fallback execCommand
+        function copyReport() {
+            const copyText = document.getElementById("report-text");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // For mobile devices
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    const msg = document.getElementById('copy-success-msg');
+                    msg.classList.remove('hidden');
+                    setTimeout(() => msg.classList.add('hidden'), 4000);
+                } else {
+                    showToast("複製失敗，請手動全選文字複製喔！");
+                }
+            } catch (err) {
+                showToast("瀏覽器不支援一鍵複製，請手動複製！");
+            }
+        }
+    </script>
+</body>
+</html>
